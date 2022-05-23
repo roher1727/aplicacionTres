@@ -112,7 +112,7 @@ class QR : AppCompatActivity(), ZXingScannerView.ResultHandler {
                         data = Uri.parse("mailto:")
                         putExtra(Intent.EXTRA_EMAIL, arrayOf(correo))
                         putExtra(Intent.EXTRA_SUBJECT, subject)
-                        putExtra(Intent.EXTRA_TEXT, parametros[4].split(';')[0s])
+                        putExtra(Intent.EXTRA_TEXT, parametros[4])
                     }
                     startActivity(i)
                     finish()
@@ -138,6 +138,9 @@ class QR : AppCompatActivity(), ZXingScannerView.ResultHandler {
                     intent_c.setType(ContactsContract.RawContacts.CONTENT_TYPE)
                     intent_c.putExtra(ContactsContract.Intents.Insert.NAME, vcard.formattedName.value)
                     intent_c.putExtra(ContactsContract.Intents.Insert.EMAIL, vcard.emails[0].value)
+                    for (e in vcard.telephoneNumbers){
+                        Log.d(e.altId,e.text)
+                    }
                     intent_c.putExtra(ContactsContract.Intents.Insert.PHONE, vcard.telephoneNumbers[1].text)
                     //intent_c.putExtra(ContactsContract.Intents.Insert.PHONE, vcard.telephoneNumbers)
                     startActivity(intent_c)
