@@ -24,8 +24,7 @@ import java.net.URL
 class QR : AppCompatActivity(), ZXingScannerView.ResultHandler {
 
     private val PERMISO_CAMARA = 1
-    private val PERMISO_CONTACTOS = 1
-    private val PERMISO_MENSAJES = 1
+
     private var scannerView: ZXingScannerView? = null
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -34,12 +33,9 @@ class QR : AppCompatActivity(), ZXingScannerView.ResultHandler {
 
 
 
-        if(checarPermiso()){
-
-        }else{
+        if(!checarPermiso()){
             solicitarPermiso()
         }
-
 
         scannerView?.setResultHandler(this)
         scannerView?.startCamera()
@@ -51,22 +47,6 @@ class QR : AppCompatActivity(), ZXingScannerView.ResultHandler {
 
     private fun checarPermiso(): Boolean {
         return (ContextCompat.checkSelfPermission(this@QR, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED)
-    }
-
-    private fun solicitarPermisoTel() {
-        ActivityCompat.requestPermissions(this@QR, arrayOf(Manifest.permission.READ_PHONE_NUMBERS),PERMISO_CAMARA)
-    }
-
-    private fun checarPermisoTel(): Boolean {
-        return (ContextCompat.checkSelfPermission(this@QR, Manifest.permission.READ_PHONE_NUMBERS) == PackageManager.PERMISSION_GRANTED)
-    }
-
-    private fun solicitarPermisoSMS() {
-        ActivityCompat.requestPermissions(this@QR, arrayOf(Manifest.permission.SEND_SMS),PERMISO_CAMARA)
-    }
-
-    private fun checarPermisoSMS(): Boolean {
-        return (ContextCompat.checkSelfPermission(this@QR, Manifest.permission.SEND_SMS) == PackageManager.PERMISSION_GRANTED)
     }
 
     override fun handleResult(p0: Result?) {
@@ -155,7 +135,13 @@ class QR : AppCompatActivity(), ZXingScannerView.ResultHandler {
                     intent_c.setType(ContactsContract.RawContacts.CONTENT_TYPE)
 
                     intent_c.putExtra(ContactsContract.Intents.Insert.NAME, vcard.structuredName.given + ' ' + vcard.structuredName.family)
-                    intent_c.putExtra(ContactsContract.Intents.Insert.EMAIL, vcard.emails[0].value)
+                    try {
+                        intent_c.putExtra(
+                            ContactsContract.Intents.Insert.EMAIL,
+                            vcard.emails[0].value
+                        )
+                    }catch (e: Exception){
+                    }
                     for (e in vcard.telephoneNumbers){
                         if(!e.text.equals("")) {
                             intent_c.putExtra(ContactsContract.Intents.Insert.PHONE, e.text)
