@@ -6,6 +6,7 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Bundle
+import android.provider.ContactsContract
 import android.util.Log
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
@@ -15,6 +16,7 @@ import androidx.core.content.ContextCompat
 import com.google.zxing.Result
 import ezvcard.Ezvcard
 import me.dm7.barcodescanner.zxing.ZXingScannerView
+import java.lang.Exception
 import java.net.MalformedURLException
 import java.net.URL
 
@@ -22,11 +24,15 @@ import java.net.URL
 class QR : AppCompatActivity(), ZXingScannerView.ResultHandler {
 
     private val PERMISO_CAMARA = 1
+    private val PERMISO_CONTACTOS = 1
+    private val PERMISO_MENSAJES = 1
     private var scannerView: ZXingScannerView? = null
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         scannerView = ZXingScannerView(this)
         setContentView(scannerView)
+
+
 
         if(checarPermiso()){
 
@@ -47,11 +53,31 @@ class QR : AppCompatActivity(), ZXingScannerView.ResultHandler {
         return (ContextCompat.checkSelfPermission(this@QR, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED)
     }
 
+    private fun solicitarPermisoTel() {
+        ActivityCompat.requestPermissions(this@QR, arrayOf(Manifest.permission.READ_PHONE_NUMBERS),PERMISO_CAMARA)
+    }
+
+    private fun checarPermisoTel(): Boolean {
+        return (ContextCompat.checkSelfPermission(this@QR, Manifest.permission.READ_PHONE_NUMBERS) == PackageManager.PERMISSION_GRANTED)
+    }
+
+    private fun solicitarPermisoSMS() {
+        ActivityCompat.requestPermissions(this@QR, arrayOf(Manifest.permission.SEND_SMS),PERMISO_CAMARA)
+    }
+
+    private fun checarPermisoSMS(): Boolean {
+        return (ContextCompat.checkSelfPermission(this@QR, Manifest.permission.SEND_SMS) == PackageManager.PERMISSION_GRANTED)
+    }
+
     override fun handleResult(p0: Result?) {
         // Código QR
         val scanResult = p0?.text
         Log.d("QR_LEIDO",scanResult!!)
+        val parametros = scanResult.split(":")
 
+        val case = scanResult.split(":")[0]
+        val cases = arrayListOf<String>("MATMSG","SMSTO","BEGIN")
+        Log.d("Caso",case!!)
         //val vcard = Ezvcard.parse(scanResult).first()
 
         //Log.d("Name", vcard.formattedName.value)
@@ -63,16 +89,54 @@ class QR : AppCompatActivity(), ZXingScannerView.ResultHandler {
             startActivity(i)
             finish()
         }catch(e: MalformedURLException){
-            AlertDialog.Builder(this@QR)
-                .setTitle("Error")
-                .setMessage("El codigo QR no es validor para la aplicacion")
-                .setPositiveButton("Aceptar", DialogInterface.OnClickListener { dialogInterface, i ->
-                    dialogInterface.dismiss()
-                    finish()
-                })
-                .create()
-                .show()
+            if(!cases.contains(case)){
+                AlertDialog.Builder(this@QR)
+                    .setTitle("Error")
+                    .setMessage("El codigo QR no es validor para la aplicacion")
+                    .setPositiveButton("Aceptar", DialogInterface.OnClickListener { dialogInterface, i ->
+                        dialogInterface.dismiss()
+                        finish()
+                    })
+                    .create()
+                    .show()
+            }
         }
+
+        when(case){
+            "MATMSG" -> {
+                Log.d("Caso", "Correo")
+                finish()
+            }
+            "SMSTO" ->{
+                try{
+                    val uri = Uri.parse(parametros[0] + ":" + parametros[1])
+                    val i = Intent(Intent.ACTION_SENDTO,uri)
+                    i.putExtra("sms_body",parametros[2])
+                    startActivity(i)
+                    finish()
+                }catch(e: Exception){
+                    Log.d("Step", "Error")
+                }
+            }
+            "BEGIN" ->{
+                try{
+                    val vcard = Ezvcard.parse(scanResult).first()
+                    val intent_c = Intent(ContactsContract.Intents.Insert.ACTION)
+                    intent_c.setType(ContactsContract.RawContacts.CONTENT_TYPE)
+                    intent_c.putExtra(ContactsContract.Intents.Insert.NAME, vcard.formattedName.value)
+                    intent_c.putExtra(ContactsContract.Intents.Insert.EMAIL, vcard.emails[0].value)
+                    intent_c.putExtra(ContactsContract.Intents.Insert.PHONE, vcard.telephoneNumbers[1].text)
+                    //intent_c.putExtra(ContactsContract.Intents.Insert.PHONE, vcard.telephoneNumbers)
+                    startActivity(intent_c)
+                    finish()
+                }catch(e: Exception){
+                    Log.d("Step", "Error")
+                }
+            }
+
+        }
+
+
 
     }
 
