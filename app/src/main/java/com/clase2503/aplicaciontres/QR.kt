@@ -104,18 +104,31 @@ class QR : AppCompatActivity(), ZXingScannerView.ResultHandler {
 
         when(case){
             "MATMSG" -> {
-                Log.d("Caso", "Correo")
-                finish()
+                try{
+                    val correo = parametros[2].split(';')[0]
+                    val subject = parametros[3].split(';')[0]
+                    val texto = parametros[4].split(':')
+                    val i = Intent(Intent.ACTION_SENDTO).apply {
+                        data = Uri.parse("mailto:")
+                        putExtra(Intent.EXTRA_EMAIL, arrayOf(correo))
+                        putExtra(Intent.EXTRA_SUBJECT, subject)
+                        putExtra(Intent.EXTRA_TEXT, parametros[4].split(';')[0s])
+                    }
+                    startActivity(i)
+                    finish()
+                }catch(e: Exception){
+                    Log.d("Error:", e.toString())
+                }
             }
             "SMSTO" ->{
                 try{
-                    val uri = Uri.parse(parametros[0] + ":" + parametros[1])
+                    val uri = Uri.parse(parametros[0].lowercase() + ":" + parametros[1])
                     val i = Intent(Intent.ACTION_SENDTO,uri)
                     i.putExtra("sms_body",parametros[2])
                     startActivity(i)
                     finish()
                 }catch(e: Exception){
-                    Log.d("Step", "Error")
+                    Log.d("Error:", e.toString())
                 }
             }
             "BEGIN" ->{
