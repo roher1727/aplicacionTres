@@ -1,3 +1,4 @@
 <resources>
-    <string name="app_name">aplicacionTres</string>
+    <string name="app_name">Ejercicio 2</string>
+    <string name="escanerqr">Escaner QR</string>
 </resources>

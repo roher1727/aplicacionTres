@@ -76,7 +76,7 @@ class QR : AppCompatActivity(), ZXingScannerView.ResultHandler {
         val parametros = scanResult.split(":")
 
         val case = scanResult.split(":")[0]
-        val cases = arrayListOf<String>("MATMSG","SMSTO","BEGIN")
+        val cases = arrayListOf<String>("MATMSG","SMSTO","BEGIN","SMTP")
         Log.d("Caso",case!!)
         //val vcard = Ezvcard.parse(scanResult).first()
 
@@ -112,7 +112,24 @@ class QR : AppCompatActivity(), ZXingScannerView.ResultHandler {
                         data = Uri.parse("mailto:")
                         putExtra(Intent.EXTRA_EMAIL, arrayOf(correo))
                         putExtra(Intent.EXTRA_SUBJECT, subject)
-                        putExtra(Intent.EXTRA_TEXT, parametros[4])
+                        putExtra(Intent.EXTRA_TEXT, parametros[4].split(';')[0])
+                    }
+                    startActivity(i)
+                    finish()
+                }catch(e: Exception){
+                    Log.d("Error:", e.toString())
+                }
+            }
+            "SMTP" -> {
+                try{
+                    val correo = parametros[1]
+                    val subject = parametros[2]
+                    val texto = parametros[3]
+                    val i = Intent(Intent.ACTION_SENDTO).apply {
+                        data = Uri.parse("mailto:")
+                        putExtra(Intent.EXTRA_EMAIL, arrayOf(correo))
+                        putExtra(Intent.EXTRA_SUBJECT, subject)
+                        putExtra(Intent.EXTRA_TEXT, texto)
                     }
                     startActivity(i)
                     finish()
@@ -136,17 +153,20 @@ class QR : AppCompatActivity(), ZXingScannerView.ResultHandler {
                     val vcard = Ezvcard.parse(scanResult).first()
                     val intent_c = Intent(ContactsContract.Intents.Insert.ACTION)
                     intent_c.setType(ContactsContract.RawContacts.CONTENT_TYPE)
-                    intent_c.putExtra(ContactsContract.Intents.Insert.NAME, vcard.formattedName.value)
+
+                    intent_c.putExtra(ContactsContract.Intents.Insert.NAME, vcard.structuredName.given + ' ' + vcard.structuredName.family)
                     intent_c.putExtra(ContactsContract.Intents.Insert.EMAIL, vcard.emails[0].value)
                     for (e in vcard.telephoneNumbers){
-                        Log.d(e.altId,e.text)
+                        if(!e.text.equals("")) {
+                            intent_c.putExtra(ContactsContract.Intents.Insert.PHONE, e.text)
+                            break
+                        }
                     }
-                    intent_c.putExtra(ContactsContract.Intents.Insert.PHONE, vcard.telephoneNumbers[1].text)
                     //intent_c.putExtra(ContactsContract.Intents.Insert.PHONE, vcard.telephoneNumbers)
                     startActivity(intent_c)
                     finish()
                 }catch(e: Exception){
-                    Log.d("Step", "Error")
+                    Log.d("Error", e.toString())
                 }
             }
 

@@ -25,7 +25,7 @@
         android:layout_height="wrap_content"
         android:layout_marginStart="82dp"
         android:layout_marginTop="82dp"
-        android:text="Escaner QR"
+        android:text="@string/escanerqr"
         android:textSize="48sp"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
